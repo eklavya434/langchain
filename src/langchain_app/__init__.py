@@ -1,17 +1,13 @@
 import os
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, ToolMessage
 
 # 1. Define the custom weather tool using the @tool decorator.
-# Note: The docstring and type hints are extremely important as LangChain uses
-# them to describe the tool's purpose and schema to the LLM.
 @tool
 def get_weather(location: str) -> str:
     """Get the current weather for a given location."""
-    # A mock implementation returning weather data.
-    # In a real app, you would fetch this from a weather API (e.g., OpenWeatherMap).
     location_lower = location.lower()
     if "tokyo" in location_lower:
         return "The weather in Tokyo is rainy and 18°C."
@@ -23,19 +19,21 @@ def get_weather(location: str) -> str:
         return f"The weather in {location} is pleasant and 22°C."
 
 def main() -> None:
+    # Load environment variables from .env file
     load_dotenv()
     
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
-        print("Error: GOOGLE_API_KEY is not set.")
+        print("Error: OPENAI_API_KEY is not set in your .env file.")
+        print("Please add your OpenAI API key to the .env file like this:")
+        print("OPENAI_API_KEY=your-openai-api-key")
         return
         
-    print("1. Initializing ChatGoogleGenerativeAI model (gemini-2.5-flash)...")
-    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+    print("1. Initializing ChatOpenAI model (gpt-4o-mini)...")
+    model = ChatOpenAI(model="gpt-4o-mini")
     
     # 2. Bind the tool to the model.
-    # This informs the model that the 'get_weather' tool is available for it to call.
-    print("2. Binding the 'get_weather' tool to the model...")
+    print("2. Binding the 'get_weather' tool to the OpenAI model...")
     model_with_tools = model.bind_tools([get_weather])
     
     # 3. Ask a question that requires the tool.
@@ -60,7 +58,6 @@ def main() -> None:
                 print(f" -> Tool Output: '{tool_output}'")
                 
                 # Append the tool execution result back to the message history.
-                # The ToolMessage links back to the model's call via tool_call_id.
                 messages.append(
                     ToolMessage(
                         content=str(tool_output),
@@ -68,8 +65,8 @@ def main() -> None:
                     )
                 )
         
-        # 5. Send the entire conversation history (including the tool output) back to the model.
-        print("\n5. Sending tool results back to the model for final answer...")
+        # 5. Send the entire conversation history back to OpenAI for final answer.
+        print("\n5. Sending tool results back to OpenAI for final answer...")
         final_response = model_with_tools.invoke(messages)
         print("\nFinal Response:")
         print(final_response.content)
