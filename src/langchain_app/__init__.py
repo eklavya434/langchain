@@ -14,20 +14,16 @@ def main() -> None:
     print("Initializing Gemini model (gemini-2.5-flash)...")
     model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
     
-    query = "Write a 200-word essay/paragraph on the use and impact of Artificial Intelligence (AI) in modern society."
-    print(f"Invoking model with query: '{query}'\n")
+    query = "Write me a 200 words paragraph on Artificial Intelligence"
+    print(f"Streaming response for query: '{query}'\n")
     
     try:
-        response = model.invoke(query)
-        print("--- Model Output ---")
-        print(response.content)
-        print("--------------------")
-        
-        # Word count validation
-        words = response.content.split()
-        print(f"\nWord count: {len(words)}")
+        # Using model.stream() to print response progressively in real-time
+        for chunk in model.stream(query):
+            print(chunk.content, end="", flush=True)
+        print("\n\n--- Streaming Completed ---")
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"\nError: {e}")
 
 if __name__ == "__main__":
     main()
